@@ -99,15 +99,6 @@ Update package metadata and PSR-4 autoload mappings:
 - Plugin name should be descriptive and include `sylius` prefix
 - Description should briefly explain what the plugin does
 
-### 2. phpspec.yml.dist
-Update the namespace configuration:
-```yaml
-suites:
-    main:
-        namespace: {CompanyName}\{PluginName}
-        psr4_prefix: {CompanyName}\{PluginName}
-```
-
 ### 3. PHP Files - Update Namespaces
 
 Update namespace declarations in:
