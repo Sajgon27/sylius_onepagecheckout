@@ -20,7 +20,7 @@ default:
 
         Behat\MinkExtension:
             files_path: "%paths.base%/vendor/sylius/sylius/src/Sylius/Behat/Resources/fixtures/"
-            base_url: "https://127.0.0.1:8080/"
+            base_url: "%env(BEHAT_BASE_URL)%"
             default_session: symfony
             javascript_session: panther
             sessions:
@@ -66,10 +66,9 @@ default:
             bootstrap: vendor/sylius/test-application/config/bootstrap.php
             kernel:
                 class: Sylius\TestApplication\Kernel
+                environment: test
 
         FriendsOfBehat\VariadicExtension: ~
-
-        SyliusLabs\SuiteTagsExtension: ~
 
         FriendsOfBehat\SuiteSettingsExtension:
             paths:

@@ -38,7 +38,7 @@ Run `composer create-project sylius/plugin-skeleton ProjectName`.
     vendor/bin/console sylius:fixtures:load -n
     ```
 
-To be able to set up a plugin's database, remember to configure your database credentials in `tests/Application/.env` and `tests/Application/.env.test`.
+To be able to set up a plugin's database, remember to configure your database credentials in `tests/TestApplication/.env` and `tests/TestApplication/.env.test`.
 
 2. Run your local server:
 

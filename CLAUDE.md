@@ -110,8 +110,8 @@ This is a **Sylius Plugin Skeleton** - a template for creating Sylius e-commerce
 
 ### Database Configuration
 Database credentials should be configured in:
-- `tests/Application/.env` (for development)
-- `tests/Application/.env.test` (for testing)
+- `tests/TestApplication/.env` (for development)
+- `tests/TestApplication/.env.test` (for testing)
 
 ## AI Development Guides
 
