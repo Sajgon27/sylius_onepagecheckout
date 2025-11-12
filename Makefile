@@ -4,9 +4,6 @@ DOCKER_COMPOSE ?= docker compose
 DOCKER_USER ?= "$(shell id -u):$(shell id -g)"
 ENV ?= "dev"
 
-rename:
-	@vendor/bin/castor plugin:rename
-
 init:
 	@make -s docker-compose-check
 	@if [ ! -e compose.override.yml ]; then \
@@ -68,3 +65,6 @@ phpunit:
 
 behat:
 	@ENV=$(ENV) DOCKER_USER=root $(DOCKER_COMPOSE) run --rm php vendor/bin/behat
+
+rename:
+	@php bin/rename-plugin.php
