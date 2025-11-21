@@ -129,6 +129,10 @@ class RenamePluginCommand extends Command
                     'Run: <info>composer install</info> (to refresh autoload)',
                     'Run: <info>make init database-init load-fixtures</info> (if using Docker)',
                 ]);
+
+                if (unlink(__FILE__)) {
+                    $io->note('This script has been deleted (one-time use only).');
+                }
             }
 
             return Command::SUCCESS;
