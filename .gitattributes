@@ -4,7 +4,6 @@
 /.github export-ignore
 /.gitignore export-ignore
 /behat.yml.dist export-ignore
-/bin export-ignore
 /docker-compose.yml export-ignore
 /docs export-ignore
 /ecs.php export-ignore
