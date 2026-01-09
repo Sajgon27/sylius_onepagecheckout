@@ -33,9 +33,6 @@ if (!$autoloaded) {
     exit(1);
 }
 
-/**
- * @author camilleislasse <guiziweb@gmail.com>
- */
 class RenamePluginCommand extends Command
 {
     private const EXCLUDE_DIRS = ['vendor', 'var', 'node_modules', '.git'];
@@ -52,6 +49,7 @@ class RenamePluginCommand extends Command
             ->addOption('feature', null, InputOption::VALUE_REQUIRED, 'Feature name (PascalCase)')
             ->addOption('description', null, InputOption::VALUE_REQUIRED, 'Plugin description')
             ->addOption('skip-interaction', null, InputOption::VALUE_NONE, 'Skip interactive mode (useful for automation)')
+            ->addOption('sylius', null, InputOption::VALUE_NONE, 'Use Sylius official plugin naming convention (Sylius\{Name}Plugin)')
         ;
     }
 
@@ -82,7 +80,9 @@ class RenamePluginCommand extends Command
         $io->writeln('You can rollback with: git reset --hard HEAD');
         $io->newLine();
 
-        $names = $this->getPluginInformation($input, $io);
+        $syliusMode = (bool) $input->getOption('sylius');
+
+        $names = $this->getPluginInformation($input, $io, $syliusMode);
         $description = $names['description'];
 
         $io->section('Configuration Summary');
@@ -176,41 +176,65 @@ class RenamePluginCommand extends Command
         return true;
     }
 
-    private function getPluginInformation(InputInterface $input, SymfonyStyle $io): array
+    private function getPluginInformation(InputInterface $input, SymfonyStyle $io, bool $syliusMode): array
     {
         $io->section('Plugin Information');
-        $io->writeln('Example: Company "Acme" + Feature "Search" → AcmeSearchPlugin');
-        $io->newLine();
 
-        $companyName = $input->getOption('company');
-        if ($companyName === null || !is_string($companyName) || !$this->validateName($companyName)) {
-            $question = new Question('Company name (PascalCase, ex: Acme)');
-            $question->setValidator(function ($answer) {
-                if (!is_string($answer) || !$this->validateName($answer)) {
-                    throw new \RuntimeException('Company name must be in PascalCase (start with uppercase letter, no spaces or special characters)');
-                }
+        $envCompany = getenv('COMPANY') ?: null;
+        $envFeature = getenv('FEATURE') ?: null;
+        $envDescription = getenv('DESCRIPTION') ?: null;
+        $envSylius = getenv('SYLIUS') === '1';
 
-                return $answer;
-            });
-            $question->setMaxAttempts(null);
-            $companyName = $io->askQuestion($question);
+        if ($envSylius) {
+            $syliusMode = true;
         }
 
-        $featureName = $input->getOption('feature');
+        $detected = $this->detectFromDirectory();
+
+        $featureName = $envFeature
+            ?? $input->getOption('feature')
+            ?? $detected['feature']
+            ?? null;
+
+        if ($detected !== null && $featureName !== null) {
+            $io->note("Auto-detected from directory: {$featureName}Plugin");
+        }
+
         if ($featureName === null || !is_string($featureName) || !$this->validateName($featureName)) {
             $question = new Question('Feature name (PascalCase, ex: Search)');
             $question->setValidator(function ($answer) {
                 if (!is_string($answer) || !$this->validateName($answer)) {
                     throw new \RuntimeException('Feature name must be in PascalCase (start with uppercase letter, no spaces or special characters)');
                 }
-
                 return $answer;
             });
             $question->setMaxAttempts(null);
             $featureName = $io->askQuestion($question);
         }
 
-        $description = $input->getOption('description');
+        if ($syliusMode) {
+            $io->note('Using Sylius official naming convention: Sylius\{Name}Plugin');
+            $companyName = 'Sylius';
+        } else {
+            $companyName = $envCompany ?? $input->getOption('company') ?? null;
+
+            if ($companyName === null || !is_string($companyName) || !$this->validateName($companyName)) {
+                $io->writeln('Example: Company "Acme" + Feature "Search" → AcmeSearchPlugin');
+                $io->newLine();
+
+                $question = new Question('Company name (PascalCase, ex: Acme)');
+                $question->setValidator(function ($answer) {
+                    if (!is_string($answer) || !$this->validateName($answer)) {
+                        throw new \RuntimeException('Company name must be in PascalCase (start with uppercase letter, no spaces or special characters)');
+                    }
+                    return $answer;
+                });
+                $question->setMaxAttempts(null);
+                $companyName = $io->askQuestion($question);
+            }
+        }
+
+        $description = $envDescription ?? $input->getOption('description') ?? null;
         if ($description === null || !is_string($description)) {
             $question = new Question('Plugin description', 'A Sylius plugin');
             $description = $io->askQuestion($question);
@@ -223,32 +247,61 @@ class RenamePluginCommand extends Command
         assert(is_string($companyName));
         assert(is_string($featureName));
 
-        $names = $this->generateNameVariations($companyName, $featureName);
+        $names = $this->generateNameVariations($companyName, $featureName, $syliusMode);
         $names['description'] = $description;
 
         return $names;
     }
 
-    private function generateNameVariations(string $company, string $feature): array
+    private function detectFromDirectory(): ?array
+    {
+        $dirName = basename(dirname(__DIR__));
+
+        if (preg_match('/^(?:[A-Z][a-zA-Z0-9]*)?([A-Z][a-zA-Z0-9]*)Plugin$/', $dirName, $matches)) {
+            return [
+                'feature' => $matches[1],
+            ];
+        }
+
+        return null;
+    }
+
+    private function generateNameVariations(string $company, string $feature, bool $syliusMode = false): array
     {
         $plugin = $feature . 'Plugin';
+        $featureSnake = $this->toSnakeCase($feature);
+
+        if ($syliusMode) {
+            $fullClass = 'Sylius' . $plugin;
+            $extensionClass = 'Sylius' . $feature . 'Extension';
+            $featureKebab = $this->toKebabCase($feature);
+
+            return [
+                'company' => 'Sylius',
+                'plugin' => $plugin,
+                'full_class' => $fullClass,
+                'extension_class' => $extensionClass,
+                'package' => 'sylius/' . $featureKebab . '-plugin',
+                'db' => 'sylius_' . $featureSnake,
+                'config_key' => 'sylius_' . $featureSnake,
+            ];
+        }
+
         $fullClass = $company . $plugin;
-        $fullClassWithoutPlugin = $company . $feature;
+        $extensionClass = $company . $feature . 'Extension';
 
         $companyKebab = $this->toKebabCase($company);
         $pluginKebab = $this->toKebabCase($plugin);
         $companySnake = $this->toSnakeCase($company);
-        $pluginSnake = $this->toSnakeCase($plugin);
-        $fullSnake = $companySnake . '_' . $pluginSnake;
 
         return [
             'company' => $company,
             'plugin' => $plugin,
             'full_class' => $fullClass,
-            'extension_class' => $fullClassWithoutPlugin . 'Extension',
+            'extension_class' => $extensionClass,
             'package' => $companyKebab . '/' . $pluginKebab,
-            'db' => $fullSnake,
-            'config_key' => $fullSnake,
+            'db' => $companySnake . '_' . $featureSnake,
+            'config_key' => $companySnake . '_' . $featureSnake,
         ];
     }
 
@@ -482,7 +535,6 @@ class RenamePluginCommand extends Command
     }
 }
 
-// Create and run application
 $application = new Application('Sylius Plugin Renamer', '1.0.0');
 $application->add(new RenamePluginCommand());
 $application->setDefaultCommand('rename', true);
