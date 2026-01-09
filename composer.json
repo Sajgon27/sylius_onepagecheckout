@@ -74,6 +74,9 @@
         }
     },
     "scripts": {
+        "post-create-project-cmd": [
+            "@php bin/rename-plugin.php"
+        ],
         "database-reset": [
             "vendor/bin/console doctrine:database:drop --force --if-exists",
             "vendor/bin/console doctrine:database:create",
