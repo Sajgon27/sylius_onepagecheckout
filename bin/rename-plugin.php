@@ -46,7 +46,7 @@ class RenamePluginCommand extends Command
             ->setDescription('Rename the plugin skeleton to your custom plugin name')
             ->addOption('dry-run', null, InputOption::VALUE_NONE, 'Preview changes without applying them')
             ->addOption('company', null, InputOption::VALUE_REQUIRED, 'Company name (PascalCase)')
-            ->addOption('feature', null, InputOption::VALUE_REQUIRED, 'Feature name (PascalCase)')
+            ->addOption('plugin-name', null, InputOption::VALUE_REQUIRED, 'Plugin name (PascalCase)')
             ->addOption('description', null, InputOption::VALUE_REQUIRED, 'Plugin description')
             ->addOption('skip-interaction', null, InputOption::VALUE_NONE, 'Skip interactive mode (useful for automation)')
             ->addOption('sylius', null, InputOption::VALUE_NONE, 'Use Sylius official plugin naming convention (Sylius\{Name}Plugin)')
@@ -59,7 +59,7 @@ class RenamePluginCommand extends Command
 
         $io->title('Sylius Plugin Renamer');
 
-        $skipInteraction = (bool) $input->getOption('skip-interaction');
+        $skipInteraction = (bool) $input->getOption('skip-interaction') || getenv('SKIP_INTERACTION') === '1';
 
         if (!$this->checkGitStatus($io, $skipInteraction)) {
             return Command::FAILURE;
@@ -90,11 +90,11 @@ class RenamePluginCommand extends Command
             ['Property', 'Value'],
             [
                 ['Full namespace', "{$names['company']}\\{$names['plugin']}"],
-                ['Full class name', $names['full_class']],
-                ['Extension class', $names['extension_class']],
+                ['Full class name', $names['fullClass']],
+                ['Extension class', $names['extensionClass']],
                 ['Package name', $names['package']],
                 ['Database name', $names['db']],
-                ['Config key', $names['config_key']],
+                ['Config key', $names['configKey']],
                 ['Description', $description],
             ],
         );
@@ -181,7 +181,7 @@ class RenamePluginCommand extends Command
         $io->section('Plugin Information');
 
         $envCompany = getenv('COMPANY') ?: null;
-        $envFeature = getenv('FEATURE') ?: null;
+        $envPluginName = getenv('PLUGIN_NAME') ?: null;
         $envDescription = getenv('DESCRIPTION') ?: null;
         $envSylius = getenv('SYLIUS') === '1';
 
@@ -191,25 +191,29 @@ class RenamePluginCommand extends Command
 
         $detected = $this->detectFromDirectory();
 
-        $featureName = $envFeature
-            ?? $input->getOption('feature')
-            ?? $detected['feature']
+        $pluginName = $envPluginName
+            ?? $input->getOption('plugin-name')
+            ?? $detected['pluginName']
             ?? null;
 
-        if ($detected !== null && $featureName !== null) {
-            $io->note("Auto-detected from directory: {$featureName}Plugin");
+        if ($detected !== null && $pluginName !== null) {
+            $io->note("Auto-detected from directory: {$pluginName}Plugin");
         }
 
-        if ($featureName === null || !is_string($featureName) || !$this->validateName($featureName)) {
-            $question = new Question('Feature name (PascalCase, ex: Search)');
+        if ($pluginName !== null && is_string($pluginName) && !$this->validateName($pluginName)) {
+            throw new \InvalidArgumentException('Plugin name must be in PascalCase (start with uppercase letter, no spaces or special characters)');
+        }
+
+        if ($pluginName === null || !is_string($pluginName)) {
+            $question = new Question('Plugin name (PascalCase)');
             $question->setValidator(function ($answer) {
                 if (!is_string($answer) || !$this->validateName($answer)) {
-                    throw new \RuntimeException('Feature name must be in PascalCase (start with uppercase letter, no spaces or special characters)');
+                    throw new \RuntimeException('Plugin name must be in PascalCase');
                 }
                 return $answer;
             });
             $question->setMaxAttempts(null);
-            $featureName = $io->askQuestion($question);
+            $pluginName = $io->askQuestion($question);
         }
 
         if ($syliusMode) {
@@ -218,14 +222,15 @@ class RenamePluginCommand extends Command
         } else {
             $companyName = $envCompany ?? $input->getOption('company') ?? null;
 
-            if ($companyName === null || !is_string($companyName) || !$this->validateName($companyName)) {
-                $io->writeln('Example: Company "Acme" + Feature "Search" → AcmeSearchPlugin');
-                $io->newLine();
+            if ($companyName !== null && is_string($companyName) && !$this->validateName($companyName)) {
+                throw new \InvalidArgumentException('Company name must be in PascalCase (start with uppercase letter, no spaces or special characters)');
+            }
 
-                $question = new Question('Company name (PascalCase, ex: Acme)');
+            if ($companyName === null || !is_string($companyName)) {
+                $question = new Question('Company name (PascalCase)');
                 $question->setValidator(function ($answer) {
                     if (!is_string($answer) || !$this->validateName($answer)) {
-                        throw new \RuntimeException('Company name must be in PascalCase (start with uppercase letter, no spaces or special characters)');
+                        throw new \RuntimeException('Company name must be in PascalCase');
                     }
                     return $answer;
                 });
@@ -235,19 +240,24 @@ class RenamePluginCommand extends Command
         }
 
         $description = $envDescription ?? $input->getOption('description') ?? null;
+        $skipInteraction = (bool) $input->getOption('skip-interaction') || getenv('SKIP_INTERACTION') === '1';
         if ($description === null || !is_string($description)) {
-            $question = new Question('Plugin description', 'A Sylius plugin');
-            $description = $io->askQuestion($question);
+            if ($skipInteraction) {
+                $description = $pluginName . ' plugin for Sylius';
+            } else {
+                $question = new Question('Plugin description', $pluginName . ' plugin for Sylius');
+                $description = $io->askQuestion($question);
+            }
         }
 
         if (!is_string($description)) {
-            $description = 'A Sylius plugin';
+            $description = $pluginName . ' plugin for Sylius';
         }
 
         assert(is_string($companyName));
-        assert(is_string($featureName));
+        assert(is_string($pluginName));
 
-        $names = $this->generateNameVariations($companyName, $featureName, $syliusMode);
+        $names = $this->generateNameVariations($companyName, $pluginName, $syliusMode);
         $names['description'] = $description;
 
         return $names;
@@ -259,49 +269,49 @@ class RenamePluginCommand extends Command
 
         if (preg_match('/^(?:[A-Z][a-zA-Z0-9]*)?([A-Z][a-zA-Z0-9]*)Plugin$/', $dirName, $matches)) {
             return [
-                'feature' => $matches[1],
+                'pluginName' => $matches[1],
             ];
         }
 
         return null;
     }
 
-    private function generateNameVariations(string $company, string $feature, bool $syliusMode = false): array
+    private function generateNameVariations(string $company, string $pluginName, bool $syliusMode = false): array
     {
-        $plugin = $feature . 'Plugin';
-        $featureSnake = $this->toSnakeCase($feature);
+        $plugin = $pluginName . 'Plugin';
+        $pluginSnake = $this->toSnakeCase($pluginName);
 
         if ($syliusMode) {
             $fullClass = 'Sylius' . $plugin;
-            $extensionClass = 'Sylius' . $feature . 'Extension';
-            $featureKebab = $this->toKebabCase($feature);
+            $extensionClass = 'Sylius' . $pluginName . 'Extension';
+            $pluginKebab = $this->toKebabCase($pluginName);
 
             return [
                 'company' => 'Sylius',
                 'plugin' => $plugin,
-                'full_class' => $fullClass,
-                'extension_class' => $extensionClass,
-                'package' => 'sylius/' . $featureKebab . '-plugin',
-                'db' => 'sylius_' . $featureSnake,
-                'config_key' => 'sylius_' . $featureSnake,
+                'fullClass' => $fullClass,
+                'extensionClass' => $extensionClass,
+                'package' => 'sylius/' . $pluginKebab . '-plugin',
+                'db' => 'sylius_' . $pluginSnake,
+                'configKey' => 'sylius_' . $pluginSnake,
             ];
         }
 
         $fullClass = $company . $plugin;
-        $extensionClass = $company . $feature . 'Extension';
+        $extensionClass = $company . $pluginName . 'Extension';
 
         $companyKebab = $this->toKebabCase($company);
-        $pluginKebab = $this->toKebabCase($plugin);
+        $fullPluginKebab = $this->toKebabCase($plugin);
         $companySnake = $this->toSnakeCase($company);
 
         return [
             'company' => $company,
             'plugin' => $plugin,
-            'full_class' => $fullClass,
-            'extension_class' => $extensionClass,
-            'package' => $companyKebab . '/' . $pluginKebab,
-            'db' => $companySnake . '_' . $featureSnake,
-            'config_key' => $companySnake . '_' . $featureSnake,
+            'fullClass' => $fullClass,
+            'extensionClass' => $extensionClass,
+            'package' => $companyKebab . '/' . $fullPluginKebab,
+            'db' => $companySnake . '_' . $pluginSnake,
+            'configKey' => $companySnake . '_' . $pluginSnake,
         ];
     }
 
@@ -310,32 +320,32 @@ class RenamePluginCommand extends Command
         $io->section('Renaming PHP files');
 
         $oldMainFile = __DIR__ . '/../src/AcmeSyliusExamplePlugin.php';
-        $newMainFile = __DIR__ . "/../src/{$names['full_class']}.php";
+        $newMainFile = __DIR__ . "/../src/{$names['fullClass']}.php";
 
         $oldExtensionFile = __DIR__ . '/../src/DependencyInjection/AcmeSyliusExampleExtension.php';
-        $newExtensionFile = __DIR__ . "/../src/DependencyInjection/{$names['extension_class']}.php";
+        $newExtensionFile = __DIR__ . "/../src/DependencyInjection/{$names['extensionClass']}.php";
 
         $renamedFiles = [];
 
         if (file_exists($oldMainFile)) {
             if ($dryRun) {
-                $renamedFiles[] = "[DRY RUN] src/AcmeSyliusExamplePlugin.php → src/{$names['full_class']}.php";
+                $renamedFiles[] = "[DRY RUN] src/AcmeSyliusExamplePlugin.php → src/{$names['fullClass']}.php";
             } else {
                 if (!rename($oldMainFile, $newMainFile)) {
                     throw new \RuntimeException("Failed to rename {$oldMainFile}");
                 }
-                $renamedFiles[] = "src/AcmeSyliusExamplePlugin.php → src/{$names['full_class']}.php";
+                $renamedFiles[] = "src/AcmeSyliusExamplePlugin.php → src/{$names['fullClass']}.php";
             }
         }
 
         if (file_exists($oldExtensionFile)) {
             if ($dryRun) {
-                $renamedFiles[] = "[DRY RUN] src/DependencyInjection/AcmeSyliusExampleExtension.php → src/DependencyInjection/{$names['extension_class']}.php";
+                $renamedFiles[] = "[DRY RUN] src/DependencyInjection/AcmeSyliusExampleExtension.php → src/DependencyInjection/{$names['extensionClass']}.php";
             } else {
                 if (!rename($oldExtensionFile, $newExtensionFile)) {
                     throw new \RuntimeException("Failed to rename {$oldExtensionFile}");
                 }
-                $renamedFiles[] = "src/DependencyInjection/AcmeSyliusExampleExtension.php → src/DependencyInjection/{$names['extension_class']}.php";
+                $renamedFiles[] = "src/DependencyInjection/AcmeSyliusExampleExtension.php → src/DependencyInjection/{$names['extensionClass']}.php";
             }
         }
 
@@ -353,12 +363,12 @@ class RenamePluginCommand extends Command
         $replacements = [
             'acme_sylius_example_plugin_%kernel.environment%' => 'sylius_%kernel.environment%',
             'Acme\\SyliusExamplePlugin' => "{$names['company']}\\{$names['plugin']}",
-            'AcmeSyliusExamplePlugin' => $names['full_class'],
-            'AcmeSyliusExampleExtension' => $names['extension_class'],
-            '@AcmeSyliusExamplePlugin' => "@{$names['full_class']}",
+            'AcmeSyliusExamplePlugin' => $names['fullClass'],
+            'AcmeSyliusExampleExtension' => $names['extensionClass'],
+            '@AcmeSyliusExamplePlugin' => "@{$names['fullClass']}",
             'Tests\\Acme\\SyliusExamplePlugin' => "Tests\\{$names['company']}\\{$names['plugin']}",
             'acme_sylius_example_plugin' => $names['db'],
-            'acme_sylius_example' => $names['config_key'],
+            'acme_sylius_example' => $names['configKey'],
         ];
 
         $finder = new Finder();
