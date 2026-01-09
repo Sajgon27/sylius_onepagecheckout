@@ -60,11 +60,6 @@ class RenamePluginCommand extends Command
         $io->title('Sylius Plugin Renamer');
 
         $skipInteraction = (bool) $input->getOption('skip-interaction') || getenv('SKIP_INTERACTION') === '1';
-
-        if (!$this->checkGitStatus($io, $skipInteraction)) {
-            return Command::FAILURE;
-        }
-
         $dryRun = (bool) $input->getOption('dry-run');
         if ($dryRun) {
             $io->note('DRY RUN MODE - No files will be modified');
@@ -77,12 +72,9 @@ class RenamePluginCommand extends Command
             }
         }
 
-        $io->writeln('You can rollback with: git reset --hard HEAD');
-        $io->newLine();
-
         $syliusMode = (bool) $input->getOption('sylius');
 
-        $names = $this->getPluginInformation($input, $io, $syliusMode);
+        $names = $this->getPluginInformation($input, $io, $syliusMode, $skipInteraction);
         $description = $names['description'];
 
         $io->section('Configuration Summary');
@@ -122,17 +114,8 @@ class RenamePluginCommand extends Command
                 $io->success('Dry run completed! Run without --dry-run to apply changes.');
             } else {
                 $io->success('Plugin renamed successfully!');
-                $io->newLine();
-                $io->writeln('<comment>Next steps:</comment>');
-                $io->listing([
-                    'Review the changes: <info>git diff</info>',
-                    'Run: <info>composer install</info> (to refresh autoload)',
-                    'Run: <info>make init database-init load-fixtures</info> (if using Docker)',
-                ]);
 
-                if (unlink(__FILE__)) {
-                    $io->note('This script has been deleted (one-time use only).');
-                }
+                unlink(__FILE__);
             }
 
             return Command::SUCCESS;
@@ -146,37 +129,7 @@ class RenamePluginCommand extends Command
         }
     }
 
-    private function checkGitStatus(SymfonyStyle $io, bool $skipInteraction): bool
-    {
-        if (!is_dir(__DIR__ . '/../.git')) {
-            $io->warning('Not a git repository. Changes cannot be easily reverted.');
-
-            return $skipInteraction ? true : $io->confirm('Continue anyway?', false);
-        }
-
-        $status = shell_exec('git status --porcelain 2>&1');
-        if ($status === null || $status === false) {
-            $io->warning('Could not check git status.');
-
-            return $skipInteraction ? true : $io->confirm('Continue anyway?', false);
-        }
-
-        if (trim($status) !== '') {
-            $io->warning([
-                'You have uncommitted changes in your repository:',
-                '',
-                $status,
-                '',
-                'The rename script will modify many files. It is recommended to commit or stash your changes first.',
-            ]);
-
-            return $skipInteraction ? true : $io->confirm('Continue anyway?', false);
-        }
-
-        return true;
-    }
-
-    private function getPluginInformation(InputInterface $input, SymfonyStyle $io, bool $syliusMode): array
+    private function getPluginInformation(InputInterface $input, SymfonyStyle $io, bool $syliusMode, bool $skipInteraction): array
     {
         $io->section('Plugin Information');
 
@@ -196,7 +149,8 @@ class RenamePluginCommand extends Command
             ?? $detected['pluginName']
             ?? null;
 
-        if ($detected !== null && $pluginName !== null) {
+        $wasAutoDetected = $detected !== null && $envPluginName === null && $input->getOption('plugin-name') === null;
+        if ($wasAutoDetected) {
             $io->note("Auto-detected from directory: {$pluginName}Plugin");
         }
 
@@ -240,7 +194,6 @@ class RenamePluginCommand extends Command
         }
 
         $description = $envDescription ?? $input->getOption('description') ?? null;
-        $skipInteraction = (bool) $input->getOption('skip-interaction') || getenv('SKIP_INTERACTION') === '1';
         if ($description === null || !is_string($description)) {
             if ($skipInteraction) {
                 $description = $pluginName . ' plugin for Sylius';
