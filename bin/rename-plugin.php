@@ -49,15 +49,12 @@ class RenamePluginCommand extends Command
             ->addOption('plugin-name', null, InputOption::VALUE_REQUIRED, 'Plugin name (PascalCase)')
             ->addOption('description', null, InputOption::VALUE_REQUIRED, 'Plugin description')
             ->addOption('skip-interaction', null, InputOption::VALUE_NONE, 'Skip interactive mode (useful for automation)')
-            ->addOption('sylius', null, InputOption::VALUE_NONE, 'Use Sylius official plugin naming convention (Sylius\{Name}Plugin)')
         ;
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $io = new SymfonyStyle($input, $output);
-
-        $io->title('Sylius Plugin Renamer');
 
         $skipInteraction = (bool) $input->getOption('skip-interaction') || getenv('SKIP_INTERACTION') === '1';
         $dryRun = (bool) $input->getOption('dry-run');
@@ -72,24 +69,20 @@ class RenamePluginCommand extends Command
             }
         }
 
-        $syliusMode = (bool) $input->getOption('sylius');
+        $syliusMode = getenv('SYLIUS') === '1';
 
         $names = $this->getPluginInformation($input, $io, $syliusMode, $skipInteraction);
         $description = $names['description'];
 
         $io->section('Configuration Summary');
-        $io->table(
-            ['Property', 'Value'],
-            [
-                ['Full namespace', "{$names['company']}\\{$names['plugin']}"],
-                ['Full class name', $names['fullClass']],
-                ['Extension class', $names['extensionClass']],
-                ['Package name', $names['package']],
-                ['Database name', $names['db']],
-                ['Config key', $names['configKey']],
-                ['Description', $description],
-            ],
-        );
+        $io->newLine();
+        $io->writeln('  <info>Plugin</info>');
+        $io->writeln("    Namespace     {$names['company']}\\{$names['plugin']}");
+        $io->newLine();
+        $io->writeln('  <info>Composer</info>');
+        $io->writeln("    Package       {$names['package']}");
+        $io->writeln("    Description   {$description}");
+        $io->newLine();
 
         if (!$dryRun && !$skipInteraction) {
             if (!$io->confirm('Continue with this configuration?', true)) {
@@ -131,16 +124,9 @@ class RenamePluginCommand extends Command
 
     private function getPluginInformation(InputInterface $input, SymfonyStyle $io, bool $syliusMode, bool $skipInteraction): array
     {
-        $io->section('Plugin Information');
-
         $envCompany = getenv('COMPANY') ?: null;
         $envPluginName = getenv('PLUGIN_NAME') ?: null;
         $envDescription = getenv('DESCRIPTION') ?: null;
-        $envSylius = getenv('SYLIUS') === '1';
-
-        if ($envSylius) {
-            $syliusMode = true;
-        }
 
         $detected = $this->detectFromDirectory();
 
@@ -149,17 +135,13 @@ class RenamePluginCommand extends Command
             ?? $detected['pluginName']
             ?? null;
 
-        $wasAutoDetected = $detected !== null && $envPluginName === null && $input->getOption('plugin-name') === null;
-        if ($wasAutoDetected) {
-            $io->note("Auto-detected from directory: {$pluginName}Plugin");
-        }
-
         if ($pluginName !== null && is_string($pluginName) && !$this->validateName($pluginName)) {
             throw new \InvalidArgumentException('Plugin name must be in PascalCase (start with uppercase letter, no spaces or special characters)');
         }
 
+        $detectedPluginDefault = $detected['pluginName'] ?? null;
         if ($pluginName === null || !is_string($pluginName)) {
-            $question = new Question('Plugin name (PascalCase)');
+            $question = new Question('Plugin name (PascalCase)', $detectedPluginDefault);
             $question->setValidator(function ($answer) {
                 if (!is_string($answer) || !$this->validateName($answer)) {
                     throw new \RuntimeException('Plugin name must be in PascalCase');
@@ -171,7 +153,6 @@ class RenamePluginCommand extends Command
         }
 
         if ($syliusMode) {
-            $io->note('Using Sylius official naming convention: Sylius\{Name}Plugin');
             $companyName = 'Sylius';
         } else {
             $companyName = $envCompany ?? $input->getOption('company') ?? null;
@@ -220,7 +201,7 @@ class RenamePluginCommand extends Command
     {
         $dirName = basename(dirname(__DIR__));
 
-        if (preg_match('/^(?:[A-Z][a-zA-Z0-9]*)?([A-Z][a-zA-Z0-9]*)Plugin$/', $dirName, $matches)) {
+        if (preg_match('/^([A-Z][a-zA-Z0-9]*)Plugin$/', $dirName, $matches)) {
             return [
                 'pluginName' => $matches[1],
             ];
@@ -245,26 +226,31 @@ class RenamePluginCommand extends Command
                 'fullClass' => $fullClass,
                 'extensionClass' => $extensionClass,
                 'package' => 'sylius/' . $pluginKebab . '-plugin',
-                'db' => 'sylius_' . $pluginSnake,
+                'db' => 'sylius_' . $pluginSnake . '_plugin',
                 'configKey' => 'sylius_' . $pluginSnake,
             ];
         }
 
-        $fullClass = $company . $plugin;
-        $extensionClass = $company . $pluginName . 'Extension';
+        $hasSyliusPrefix = str_starts_with($pluginName, 'Sylius');
+        $syliusPlugin = $hasSyliusPrefix ? $plugin : 'Sylius' . $plugin;
+        $syliusPluginName = $hasSyliusPrefix ? $pluginName : 'Sylius' . $pluginName;
+
+        $fullClass = $company . $syliusPlugin;
+        $extensionClass = $company . $syliusPluginName . 'Extension';
 
         $companyKebab = $this->toKebabCase($company);
-        $fullPluginKebab = $this->toKebabCase($plugin);
+        $fullPluginKebab = $this->toKebabCase($syliusPlugin);
         $companySnake = $this->toSnakeCase($company);
+        $pluginSnakeForDb = $hasSyliusPrefix ? $pluginSnake : 'sylius_' . $pluginSnake;
 
         return [
             'company' => $company,
-            'plugin' => $plugin,
+            'plugin' => $syliusPlugin,
             'fullClass' => $fullClass,
             'extensionClass' => $extensionClass,
             'package' => $companyKebab . '/' . $fullPluginKebab,
-            'db' => $companySnake . '_' . $pluginSnake,
-            'configKey' => $companySnake . '_' . $pluginSnake,
+            'db' => $companySnake . '_' . $pluginSnakeForDb . '_plugin',
+            'configKey' => $companySnake . '_' . $pluginSnakeForDb,
         ];
     }
 
@@ -314,7 +300,7 @@ class RenamePluginCommand extends Command
         $io->section('Updating file contents');
 
         $replacements = [
-            'acme_sylius_example_plugin_%kernel.environment%' => 'sylius_%kernel.environment%',
+            'acme_sylius_example_plugin_%kernel.environment%' => "{$names['db']}_%kernel.environment%",
             'Acme\\SyliusExamplePlugin' => "{$names['company']}\\{$names['plugin']}",
             'AcmeSyliusExamplePlugin' => $names['fullClass'],
             'AcmeSyliusExampleExtension' => $names['extensionClass'],
@@ -399,6 +385,9 @@ class RenamePluginCommand extends Command
 
         unset($composer['autoload-dev']['psr-4']['Tests\\Acme\\SyliusExamplePlugin\\']);
         $composer['autoload-dev']['psr-4']["Tests\\{$names['company']}\\{$names['plugin']}\\"] = ['tests/', 'tests/TestApplication/src/'];
+
+        unset($composer['scripts']['post-create-project-cmd']);
+        unset($composer['scripts']['post-root-package-install']);
 
         if ($dryRun) {
             $io->writeln('[DRY RUN] Would update composer.json with:');
