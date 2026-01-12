@@ -78,7 +78,9 @@
             "@php bin/validate-directory.php"
         ],
         "post-create-project-cmd": [
-            "@php bin/rename-plugin.php"
+            "@php bin/rename-plugin.php",
+            "@test-app-init",
+            "@php bin/show-success.php"
         ],
         "database-reset": [
             "vendor/bin/console doctrine:database:drop --force --if-exists",
