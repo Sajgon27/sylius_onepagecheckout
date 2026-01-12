@@ -74,6 +74,9 @@
         }
     },
     "scripts": {
+        "post-root-package-install": [
+            "@php bin/validate-directory.php"
+        ],
         "post-create-project-cmd": [
             "@php bin/rename-plugin.php"
         ],
