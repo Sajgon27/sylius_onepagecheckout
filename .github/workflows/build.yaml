@@ -29,7 +29,7 @@ jobs:
 
         env:
             APP_ENV: test
-            BEHAT_BASE_URL: "https://127.0.0.1:8080/"
+            BEHAT_BASE_URL: "http://127.0.0.1:8080/"
             DATABASE_URL: "mysql://root:root@127.0.0.1/sylius?serverVersion=${{ matrix.mysql }}"
 
         steps:
@@ -65,10 +65,6 @@ jobs:
             -
                 name: Output PHP version for Symfony CLI
                 run: php -v | head -n 1 | awk '{ print $2 }' > .php-version
-
-            -
-                name: Install certificates
-                run: symfony server:ca:install
 
             -
                 name: Get Composer cache directory
@@ -161,7 +157,7 @@ jobs:
 
             -
                 name: Run webserver
-                run: symfony server:start --port=8080 --daemon
+                run: symfony server:start --port=8080 --no-tls --daemon
 
             -
                 name: Run Behat
