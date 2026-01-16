@@ -43,7 +43,32 @@ jobs:
                     - php: "8.3"
                       symfony: "^7.4"
                       sylius: "~2.2.0"
+                      database: "mysql:8.0"
+                      node: "22.x"
+                    - php: "8.3"
+                      symfony: "^7.4"
+                      sylius: "~2.2.0"
+                      database: "mariadb:10.11"
+                      node: "22.x"
+                    - php: "8.3"
+                      symfony: "^7.4"
+                      sylius: "~2.2.0"
+                      database: "mariadb:11.4"
+                      node: "22.x"
+                    - php: "8.3"
+                      symfony: "^7.4"
+                      sylius: "~2.2.0"
+                      database: "postgres:15"
+                      node: "22.x"
+                    - php: "8.3"
+                      symfony: "^7.4"
+                      sylius: "~2.2.0"
                       database: "postgres:16"
+                      node: "22.x"
+                    - php: "8.3"
+                      symfony: "^7.4"
+                      sylius: "~2.2.0"
+                      database: "postgres:17"
                       node: "22.x"
 
         env:
@@ -54,30 +79,13 @@ jobs:
                 uses: actions/checkout@v4
 
             -
-                name: Parse database string
-                run: |
-                    DB_TYPE="${DATABASE%%:*}"
-                    DB_VERSION="${DATABASE##*:}"
-                    echo "DB_TYPE=$DB_TYPE" >> $GITHUB_ENV
-                    echo "DB_VERSION=$DB_VERSION" >> $GITHUB_ENV
-
-                    if [ "$DB_TYPE" = "postgres" ]; then
-                        echo "DATABASE_URL=pgsql://postgres:postgres@127.0.0.1/sylius?serverVersion=$DB_VERSION" >> $GITHUB_ENV
-                    else
-                        echo "DATABASE_URL=mysql://root:root@127.0.0.1/sylius?serverVersion=$DB_VERSION" >> $GITHUB_ENV
-                    fi
-                env:
-                    DATABASE: ${{ matrix.database }}
-
-            -
                 name: Build Sylius Test Application
-                uses: SyliusLabs/BuildTestAppAction@v3.2.0
+                uses: SyliusLabs/BuildTestAppAction@v4
                 with:
                     e2e_js: "yes"
                     cache_key: "${{ runner.os }}-php-${{ matrix.php }}-composer-${{ hashFiles('**/composer.json') }}"
                     cache_restore_key: "${{ runner.os }}-php-${{ matrix.php }}-composer-"
-                    database: "${{ env.DB_TYPE }}"
-                    database_version: "${{ env.DB_VERSION }}"
+                    database: "${{ matrix.database }}"
                     node_version: "${{ matrix.node }}"
                     php_version: "${{ matrix.php }}"
                     sylius_version: "${{ matrix.sylius }}"
