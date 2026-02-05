@@ -117,13 +117,13 @@ To be able to set up a plugin's database, remember to configure your database cr
 - Using `test` environment:
 
     ```bash
-    APP_ENV=test vendor/bin/console vendor/bin/console sylius:fixtures:load -n
+    APP_ENV=test vendor/bin/console sylius:fixtures:load -n
     APP_ENV=test symfony server:start -d
     ```
     
 - Using `dev` environment:
 
     ```bash
-    vendor/bin/console vendor/bin/console sylius:fixtures:load -n
+    vendor/bin/console sylius:fixtures:load -n
     symfony server:start -d
     ```
