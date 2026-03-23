@@ -1,0 +1,76 @@
+<div class="container" {{attributes}}>
+	<div class="row my-5">
+		<div class="col-8">
+			{{ form_start(form ) }}
+			<div class="mb-2">
+				<h4>Address</h4>
+				{{ form_row(form.customer.email) }}
+				<h4>Billing Address</h4>
+				<div class="row">
+					<div class="col-6">
+						{{ form_row(form.billingAddress.firstName) }}</div>
+					<div class="col-6">{{ form_row(form.billingAddress.lastName) }}</div>
+				</div>
+				{{ form_row(form.billingAddress.company) }}
+				{{ form_row(form.billingAddress.street) }}
+				{{ form_row(form.billingAddress.countryCode, {
+    attr: {
+        'data-action': 'change->live#action',
+        'data-live-action-param': 'debounce(100)|saveAddress'
+    }
+}) }}
+				{{ form_row(form.billingAddress.city) }}
+				{{ form_row(form.billingAddress.postcode,  {
+							    attr: {
+        'data-action': 'change->live#action',
+        'data-live-action-param': 'debounce(100)|saveAddress'
+    }
+						}) }}
+			</div>
+
+			<div>
+				<div>
+					<input data-model="showShippingAddress" type="checkbox"/>
+					<label for="showShippingAddress">Ship to a different address?</label>
+				</div>
+
+				{% if this.showShippingAddress %}
+					<div class="mt-4">
+						<h4>Shipping Address</h4>
+						<div class="row">
+							<div class="col-6">
+								{{ form_row(form.shippingAddress.firstName) }}</div>
+							<div class="col-6">{{ form_row(form.shippingAddress.lastName) }}</div>
+						</div>
+						{{ form_row(form.shippingAddress.company) }}
+						{{ form_row(form.shippingAddress.street) }}
+						{{ form_row(form.shippingAddress.countryCode,  {
+							    attr: {
+								'data-action': 'change->live#action',
+								'data-live-action-param': 'debounce(100)|saveAddress'
+							}
+						}) }}
+						{{ form_row(form.shippingAddress.city) }}
+						{{ form_row(form.shippingAddress.postcode,  {
+							    attr: {
+								'data-action': 'change->live#action',
+								'data-live-action-param': 'debounce(100)|saveAddress'
+							}
+						}) }}
+					</div>
+				{% endif %}
+
+
+				{{ form_end(form,{ render_rest: false}) }}
+			</div>
+
+		</div>
+		<div class="col-4">
+			{% hook 'one_page_checkout_payment' %}
+			{% hook 'one_page_checkout_shipment' %}
+			{% hook 'one_page_checkout_summary' %}
+			{% hook 'one_page_checkout_complete' %}
+
+		</div>
+	</div>
+</div>

@@ -1,10 +1,11 @@
 imports:
-    - { resource: "@AcmeSyliusExamplePlugin/config/config.yaml" }
+    - { resource: "@MudrakOnePageCheckoutPlugin/config/config.yaml" }
     - { resource: "services_test.php" }
 
 twig:
     paths:
         '%kernel.project_dir%/../../../tests/TestApplication/templates': ~
+    form_themes: ['bootstrap_5_layout.html.twig']
 
 # Remove if you do not need to extend entities
 doctrine:
@@ -16,4 +17,4 @@ doctrine:
                         is_bundle: false
                         type: attribute
                         dir: '%kernel.project_dir%/../../../tests/TestApplication/src/Entity'
-                        prefix: Tests\Acme\SyliusExamplePlugin
+                        prefix: Tests\MudrakOnePageCheckoutPlugin

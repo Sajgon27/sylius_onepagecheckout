@@ -1,0 +1,11 @@
+framework:
+    workflows:
+        !php/const Sylius\Component\Core\OrderCheckoutTransitions::GRAPH:
+            transitions:
+                !php/const Sylius\Component\Core\OrderCheckoutTransitions::TRANSITION_COMPLETE:
+                    from: 
+                        - !php/const Sylius\Component\Core\OrderCheckoutStates::STATE_CART
+                        - !php/const Sylius\Component\Core\OrderCheckoutStates::STATE_PAYMENT_SELECTED
+                        - !php/const Sylius\Component\Core\OrderCheckoutStates::STATE_PAYMENT_SKIPPED
+                    to: 
+                        - !php/const Sylius\Component\Core\OrderCheckoutStates::STATE_COMPLETED

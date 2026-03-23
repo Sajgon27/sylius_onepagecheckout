@@ -1,0 +1,11 @@
+{% extends '@SyliusShop/shared/layout/base.html.twig' %}
+{# {% extends '@SyliusShop/checkout/common/layout.html.twig' %} #}
+
+{% block content %}
+	<div class="container">
+		{{component('MudrakOnePageCheckoutPlugin:OnePageCheckoutComponent', {
+			order: order
+		})}}
+	</div>
+
+{% endblock %}

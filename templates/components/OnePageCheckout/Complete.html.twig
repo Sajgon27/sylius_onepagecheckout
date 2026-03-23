@@ -1,0 +1,16 @@
+<div {{ attributes }}>
+    {{ form_start(form, {
+        attr: {
+            'data-action': 'live#action',
+            'data-live-action-param': 'submit'
+        }
+    }) }}
+
+    {{ form_row(form.notes) }}
+
+    <button type="submit" class="btn btn-primary" id="confirmation-button" data-test-button="confirmation-button">
+        Place order
+    </button>
+
+    {{ form_end(form) }}
+</div>

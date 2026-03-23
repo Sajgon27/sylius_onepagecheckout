@@ -1,0 +1,16 @@
+<div {{ attributes }}>
+	<h4>Shipment Method</h4>
+
+	<div data-action="change->live#action" data-live-action-param="updateShippingMethod">
+		{{form_start(form)}}
+
+		{% for key, shipment in this.order.shipments %}
+			{% hook 'shipment' with { 'form': form.shipments[key], 'index': loop.index, _prefixes: ['sylius_shop.checkout.select_shipping.content.form.shipments', 'sylius_shop.checkout.common.select_shipping.content.form.shipments'] } %}
+		{% else %}
+			{% hook 'shipment#unavailable' %}
+		{% endfor %}
+		
+		{{form_end(form)}}
+	</div>
+
+</div>
