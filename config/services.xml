@@ -1,16 +1,29 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 
 <container
-        xmlns="http://symfony.com/schema/dic/services"
-        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-        xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd"
+    xmlns="http://symfony.com/schema/dic/services"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd"
 >
+
     <imports>
         <import resource="services/**" />
     </imports>
 
     <services>
-        <service id="Acme\SyliusExamplePlugin\Controller\GreetingController" autowire="true" autoconfigure="true" public="true" />
-        <!-- Put your services here -->
+        <defaults autowire="true" autoconfigure="true" />
+
+        <!-- Handler namespace -->
+        <prototype
+            namespace="Mudrak\OnePageCheckoutPlugin\Handlers\"
+            resource="../src/Handlers/"
+        />
+
+        <!-- Twig Component namespace -->
+        <prototype
+            namespace="Mudrak\OnePageCheckoutPlugin\Twig\Components\"
+            resource="../src/Twig/Components/"
+        />
     </services>
+
 </container>

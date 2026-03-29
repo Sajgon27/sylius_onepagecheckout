@@ -1,5 +1,8 @@
-acme_sylius_example_admin:
-    resource: "@AcmeSyliusExamplePlugin/config/routes/admin.yaml"
+mudrak_one_page_checkout_admin:
+    resource: "@MudrakOnePageCheckoutPlugin/config/routes/admin.yaml"
 
-acme_sylius_example_shop:
-    resource: "@AcmeSyliusExamplePlugin/config/routes/shop.yaml"
+mudrak_one_page_checkout_shop:
+    resource: "@MudrakOnePageCheckoutPlugin/config/routes/shop.yaml"
+
+live_component:
+    resource: '@LiveComponentBundle/config/routes.php'

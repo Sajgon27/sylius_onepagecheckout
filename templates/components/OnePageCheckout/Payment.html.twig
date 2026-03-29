@@ -1,0 +1,14 @@
+<div {{ attributes }}>
+	<h4>Payment Method</h4>
+
+	<div data-action="change->live#action" data-live-action-param="updatePaymentMethod">
+		{{form_start(form)}}
+			{% for payment_form in form.payments %}
+				{% hook 'payment' with { 'form': payment_form, 'index': loop.index, _prefixes: ['sylius_shop.checkout.select_payment.content.form.select_payment', 'sylius_shop.checkout.common.select_payment.content.form.select_payment', 'sylius_shop.shared.form.select_payment'] } %}
+			{% else %}
+				{% hook 'payment#unavailable' %}
+			{% endfor %}
+		{{form_end(form, { 'render_rest': false })}}
+	</div>
+
+</div>

@@ -1,7 +1,7 @@
 {
-    "name": "sylius/plugin-skeleton",
+    "name": "mudrak/one-page-checkout-plugin",
     "type": "sylius-plugin",
-    "description": "Acme example plugin for Sylius.",
+    "description": "One Page Checkout plugin for Sylius.",
     "keywords": [
         "sylius",
         "sylius-plugin",
@@ -64,12 +64,12 @@
     },
     "autoload": {
         "psr-4": {
-            "Acme\\SyliusExamplePlugin\\": "src/"
+            "Mudrak\\OnePageCheckoutPlugin\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "Tests\\Acme\\SyliusExamplePlugin\\": ["tests/", "tests/TestApplication/src/"]
+            "Tests\\Mudrak\\OnePageCheckoutPlugin\\": ["tests/", "tests/TestApplication/src/"]
         }
     },
     "scripts": {

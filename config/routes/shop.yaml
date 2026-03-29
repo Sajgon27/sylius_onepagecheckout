@@ -1,13 +1,14 @@
-# Delete these routes and define your own shop routes here
-
-acme_sylius_example_static_welcome:
-    path: /static-welcome/{name}
+sylius_shop_one_page_checkout:
+    path: /{_locale}/one-page-checkout
+    methods: [GET, PUT, POST]
     defaults:
-        _controller: Acme\SyliusExamplePlugin\Controller\GreetingController::staticallyGreetAction
-        name: ~
-
-acme_sylius_example_dynamic_welcome:
-    path: /dynamic-welcome/{name}
-    defaults:
-        _controller: Acme\SyliusExamplePlugin\Controller\GreetingController::dynamicallyGreetAction
-        name: ~
+        _controller: sylius.controller.order::updateAction
+        _sylius:
+            template: '@MudrakOnePageCheckoutPlugin/shop/one_page_checkout.html.twig'
+            repository:
+                method: findOneBy
+                arguments:
+                    - id: "expr:service('sylius.context.cart').getCart().getId()"
+            state_machine:
+                graph: sylius_order_checkout
+                transition: complete

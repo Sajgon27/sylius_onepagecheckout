@@ -1,5 +1,5 @@
 <?php
 
 return [
-    Acme\SyliusExamplePlugin\AcmeSyliusExamplePlugin::class => ['all' => true],
+    Mudrak\OnePageCheckoutPlugin\MudrakOnePageCheckoutPlugin::class => ['all' => true],
 ];
