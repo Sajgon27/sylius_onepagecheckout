@@ -25,7 +25,7 @@ class Shipment
     use HookableLiveComponentTrait;
     use ComponentToolsTrait;
 
-    #[LiveProp(writable: true, updateFromParent: true)]
+    #[LiveProp(writable: true, updateFromParent: true, useSerializerForHydration: true)]
     public OrderInterface $order;
 
     public function __construct(

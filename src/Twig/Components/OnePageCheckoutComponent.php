@@ -24,7 +24,7 @@ class OnePageCheckoutComponent
     use DefaultActionTrait;
     use ComponentWithFormTrait;
 
-    #[LiveProp]
+    #[LiveProp(useSerializerForHydration: true)]
     public ?OrderInterface $order = null;
 
     #[LiveProp(writable: true)]

@@ -17,7 +17,7 @@ class Summary
     use DefaultActionTrait;
     use HookableLiveComponentTrait;
 
-    #[LiveProp(writable: true, updateFromParent: true)]
+    #[LiveProp(writable: true, updateFromParent: true, useSerializerForHydration: true)]
     public OrderInterface $order;
 
     public function __construct() {}

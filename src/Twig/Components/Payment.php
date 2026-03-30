@@ -23,7 +23,7 @@ class Payment
     use ComponentWithFormTrait;
     use HookableLiveComponentTrait;
 
-    #[LiveProp(writable: true)]
+    #[LiveProp(writable: true, useSerializerForHydration: true)]
     public OrderInterface $order;
 
     public function __construct(
