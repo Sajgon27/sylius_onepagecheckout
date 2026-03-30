@@ -63,5 +63,6 @@ class OnePageCheckoutComponent
         $this->checkoutFormHandler->handle($this->getForm());
         $this->emit('updateShipment');
         $this->emit('updatePayment');
+        $this->emit('updateSummary');
     }
 }
