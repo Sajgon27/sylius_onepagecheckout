@@ -10,11 +10,13 @@ use Mudrak\OnePageCheckoutPlugin\Handlers\CheckoutSaveFormHandler;
 use Doctrine\ORM\EntityManagerInterface;
 use Sylius\Bundle\ShopBundle\Form\Type\Checkout\AddressType;
 use Sylius\Bundle\UiBundle\Twig\Component\TemplatePropTrait;
+use Sylius\TwigHooks\LiveComponent\HookableLiveComponentTrait;
 use Symfony\Component\Form\FormFactoryInterface;
 use Symfony\Component\Form\FormInterface;
 use Symfony\UX\LiveComponent\Attribute\AsLiveComponent;
 use Symfony\UX\LiveComponent\Attribute\LiveAction;
 use Symfony\UX\LiveComponent\Attribute\LiveProp;
+use Symfony\UX\LiveComponent\ComponentToolsTrait;
 use Symfony\UX\LiveComponent\ComponentWithFormTrait;
 use Symfony\UX\LiveComponent\DefaultActionTrait;
 
@@ -24,8 +26,9 @@ class OnePageCheckoutComponent
     use TemplatePropTrait;
     use DefaultActionTrait;
     use ComponentWithFormTrait;
-
-    #[LiveProp]
+    use ComponentToolsTrait;
+    use HookableLiveComponentTrait;
+    #[LiveProp] 
     public ?int $orderId = null;
 
     #[LiveProp(writable: true)]
@@ -36,7 +39,8 @@ class OnePageCheckoutComponent
         private CheckoutSaveFormHandler $checkoutFormHandler,
         protected readonly FormFactoryInterface $formFactory,
         private OrderRepositoryInterface $orderRepository,
-    ) {}
+    ) {
+    }
 
     public function getOrder(): ?OrderInterface
     {
@@ -55,7 +59,9 @@ class OnePageCheckoutComponent
     #[LiveAction]
     public function saveAddress(): void
     {
-        $this->submitForm();
+        $this->submitForm(); 
         $this->checkoutFormHandler->handle($this->getForm());
+        $this->emit('updateShipment');
+        $this->emit('updatePayment');
     }
 }

@@ -13,10 +13,12 @@ use Symfony\Component\Form\FormFactoryInterface;
 use Symfony\Component\Form\FormInterface;
 use Symfony\UX\LiveComponent\Attribute\AsLiveComponent;
 use Symfony\UX\LiveComponent\Attribute\LiveAction;
+use Symfony\UX\LiveComponent\Attribute\LiveListener;
 use Symfony\UX\LiveComponent\Attribute\LiveProp;
 use Symfony\UX\LiveComponent\ComponentToolsTrait;
 use Symfony\UX\LiveComponent\ComponentWithFormTrait;
 use Symfony\UX\LiveComponent\DefaultActionTrait;
+
 
 #[AsLiveComponent('OnePageCheckout:Shipment', template: '@MudrakOnePageCheckoutPlugin/components/OnePageCheckout/Shipment.html.twig')]
 class Shipment
@@ -51,6 +53,11 @@ class Shipment
     {
         $this->submitForm();
         $this->emit('updateSummary');
+        $this->emit('updatePayment');
         $this->checkoutFormHandler->handle($this->getForm());
     }
+
+    #[LiveListener('updateShipment')]
+    public function updateShipment()
+    { }
 }

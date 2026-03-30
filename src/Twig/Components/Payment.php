@@ -13,7 +13,9 @@ use Symfony\Component\Form\FormFactoryInterface;
 use Symfony\Component\Form\FormInterface;
 use Symfony\UX\LiveComponent\Attribute\AsLiveComponent;
 use Symfony\UX\LiveComponent\Attribute\LiveAction;
+use Symfony\UX\LiveComponent\Attribute\LiveListener;
 use Symfony\UX\LiveComponent\Attribute\LiveProp;
+use Symfony\UX\LiveComponent\ComponentToolsTrait;
 use Symfony\UX\LiveComponent\ComponentWithFormTrait;
 use Symfony\UX\LiveComponent\DefaultActionTrait;
 
@@ -23,6 +25,7 @@ class Payment
     use DefaultActionTrait;
     use ComponentWithFormTrait;
     use HookableLiveComponentTrait;
+    use ComponentToolsTrait;
 
     #[LiveProp(writable: true)]
     public ?int $orderId = null;
@@ -48,7 +51,12 @@ class Payment
     public function updatePaymentMethod(): void
     {
         $this->submitForm();
-
+        $this->emit('updateSummary');
+        $this->emit('updateShipment');
         $this->checkoutFormHandler->handle($this->getForm());
     }
+
+    #[LiveListener('updatePayment')]
+    public function updatePayment()
+    { }
 }

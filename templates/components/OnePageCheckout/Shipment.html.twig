@@ -1,11 +1,15 @@
 {% form_theme form 'bootstrap_5_layout.html.twig' %}
+{% import '@SyliusShop/shared/macro/loader.html.twig' as loader %}
+
 
 <div {{ attributes }}>
 	<h4>Shipment Method</h4>
 
-	<div data-action="change->live#action" data-live-action-param="updateShippingMethod">
-		{{form_start(form)}}
+	<div class="position-relative" data-action="change->live#action" data-live-action-param="updateShippingMethod">
+		{{ loader.render() }}
 
+		{{form_start(form)}}
+	
 		{% for key, shipment in this.order.shipments %}
 			{% hook 'shipment' with { 'form': form.shipments[key], 'index': loop.index, _prefixes: ['sylius_shop.checkout.select_shipping.content.form.shipments', 'sylius_shop.checkout.common.select_shipping.content.form.shipments'] } %}
 		{% else %}

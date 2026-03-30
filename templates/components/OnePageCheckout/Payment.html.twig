@@ -1,9 +1,11 @@
 {% form_theme form 'bootstrap_5_layout.html.twig' %}
+{% import '@SyliusShop/shared/macro/loader.html.twig' as loader %}
 
 <div {{ attributes }}>
 	<h4>Payment Method</h4>
 
-	<div data-action="change->live#action" data-live-action-param="updatePaymentMethod">
+	<div class="position-relative" data-action="change->live#action" data-live-action-param="updatePaymentMethod">
+		{{ loader.render() }}
 		{{form_start(form)}}
 			{% for payment_form in form.payments %}
 				{% hook 'payment' with { 'form': payment_form, 'index': loop.index, _prefixes: ['sylius_shop.checkout.select_payment.content.form.select_payment', 'sylius_shop.checkout.common.select_payment.content.form.select_payment', 'sylius_shop.shared.form.select_payment'] } %}
