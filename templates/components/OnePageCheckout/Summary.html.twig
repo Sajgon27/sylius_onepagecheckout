@@ -3,6 +3,6 @@
 <div {{ attributes }} class="mb-4">
 	<div class="position-relative">
 		{{ loader.render() }}
-		{% hook 'summary' with { order: order, _prefixes: ['sylius_shop.checkout.common.sidebar', 'sylius_shop.checkout.sidebar', 'sylius_shop.checkout.common.select_shipping.sidebar', 'sylius_shop.checkout.select_shipping.sidebar'] } %}
+		{% hook 'summary' with { order: this.order, _prefixes: ['sylius_shop.checkout.common.sidebar', 'sylius_shop.checkout.sidebar', 'sylius_shop.checkout.common.select_shipping.sidebar', 'sylius_shop.checkout.select_shipping.sidebar'] } %}
 	</div>
 </div>

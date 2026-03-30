@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Mudrak\OnePageCheckoutPlugin\Twig\Components;
 
 use Sylius\Component\Core\Model\OrderInterface;
+use Sylius\Component\Core\Repository\OrderRepositoryInterface;
 use Mudrak\OnePageCheckoutPlugin\Handlers\CheckoutSaveFormHandler;
 use Sylius\Bundle\ShopBundle\Form\Type\Checkout\SelectPaymentType;
 use Sylius\TwigHooks\LiveComponent\HookableLiveComponentTrait;
@@ -23,19 +24,24 @@ class Payment
     use ComponentWithFormTrait;
     use HookableLiveComponentTrait;
 
-    #[LiveProp(writable: true, useSerializerForHydration: true)]
-    public OrderInterface $order;
+    #[LiveProp(writable: true)]
+    public ?int $orderId = null;
 
     public function __construct(
         private CheckoutSaveFormHandler $checkoutFormHandler,
         protected readonly FormFactoryInterface $formFactory,
+        private OrderRepositoryInterface $orderRepository,
     ) {
+    }
+
+    public function getOrder(): ?OrderInterface
+    {
+        return $this->orderId ? $this->orderRepository->find($this->orderId) : null;
     }
 
     public function instantiateForm(): FormInterface
     {
-        return $this->formFactory->create(SelectPaymentType::class, $this->order);
-        
+        return $this->formFactory->create(SelectPaymentType::class, $this->getOrder());
     }
 
     #[LiveAction]

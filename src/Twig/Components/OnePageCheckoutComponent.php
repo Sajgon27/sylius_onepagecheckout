@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Mudrak\OnePageCheckoutPlugin\Twig\Components;
 
 use Sylius\Component\Core\Model\OrderInterface;
+use Sylius\Component\Core\Repository\OrderRepositoryInterface;
 use Mudrak\OnePageCheckoutPlugin\Handlers\CheckoutSaveFormHandler;
 use Doctrine\ORM\EntityManagerInterface;
 use Sylius\Bundle\ShopBundle\Form\Type\Checkout\AddressType;
@@ -24,8 +25,8 @@ class OnePageCheckoutComponent
     use DefaultActionTrait;
     use ComponentWithFormTrait;
 
-    #[LiveProp(useSerializerForHydration: true)]
-    public ?OrderInterface $order = null;
+    #[LiveProp]
+    public ?int $orderId = null;
 
     #[LiveProp(writable: true)]
     public bool $showShippingAddress = false;
@@ -34,13 +35,20 @@ class OnePageCheckoutComponent
         private EntityManagerInterface $em,
         private CheckoutSaveFormHandler $checkoutFormHandler,
         protected readonly FormFactoryInterface $formFactory,
-
+        private OrderRepositoryInterface $orderRepository,
     ) {}
+
+    public function getOrder(): ?OrderInterface
+    {
+        return $this->orderId ? $this->orderRepository->find($this->orderId) : null;
+    }
 
     protected function instantiateForm(): FormInterface
     {
-        return $this->formFactory->create(AddressType::class, $this->order, [
-            'customer' => $this->order->getCustomer(),
+        $order = $this->getOrder();
+
+        return $this->formFactory->create(AddressType::class, $order, [
+            'customer' => $order->getCustomer(),
         ]);
     }
     

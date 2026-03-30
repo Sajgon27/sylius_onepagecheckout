@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Mudrak\OnePageCheckoutPlugin\Twig\Components;
 
 use Sylius\Component\Core\Model\OrderInterface;
+use Sylius\Component\Core\Repository\OrderRepositoryInterface;
 use Sylius\Bundle\CoreBundle\Form\Type\Checkout\CompleteType;
 use Sylius\Component\Order\Context\CartContextInterface;
 use Sylius\TwigHooks\LiveComponent\HookableLiveComponentTrait;
@@ -27,20 +28,26 @@ class Complete extends AbstractController
     use HookableLiveComponentTrait;
     use ComponentWithFormTrait;
 
-    #[LiveProp(writable: true, useSerializerForHydration: true)]
-    public OrderInterface $order;
+    #[LiveProp(writable: true)]
+    public ?int $orderId = null;
 
     public function __construct(
         private CartContextInterface $cartContext,
         private Registry $workflowRegistry,
         private EntityManagerInterface $entityManager,
         protected readonly FormFactoryInterface $formFactory,
+        private OrderRepositoryInterface $orderRepository,
     ) {
+    }
+
+    public function getOrder(): ?OrderInterface
+    {
+        return $this->orderId ? $this->orderRepository->find($this->orderId) : null;
     }
 
     public function instantiateForm(): FormInterface
     {
-        return $this->formFactory->create(CompleteType::class, $this->order);
+        return $this->formFactory->create(CompleteType::class, $this->getOrder());
     }
 
     #[LiveAction]
@@ -52,13 +59,14 @@ class Complete extends AbstractController
             return new Response('', Response::HTTP_BAD_REQUEST);
         }
 
-        $workflow = $this->workflowRegistry->get($this->order, 'sylius_order_checkout');
-        $workflow->apply($this->order, 'complete');
+        $order = $this->getOrder();
+        $workflow = $this->workflowRegistry->get($order, 'sylius_order_checkout');
+        $workflow->apply($order, 'complete');
 
         $this->entityManager->flush();
 
         return $this->redirectToRoute('sylius_shop_order_pay', [
-            'tokenValue' => $this->order->getTokenValue(),
+            'tokenValue' => $order->getTokenValue(),
         ]);
     }
 }

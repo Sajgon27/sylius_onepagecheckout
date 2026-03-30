@@ -4,23 +4,23 @@ sylius_twig_hooks:
             sylius_one_page_checkout_summary:
                 component: 'OnePageCheckout:Summary'
                 props:
-                    order: '@=_context.order'
+                    orderId: '@=_context.orderId'
                     template: '@MudrakOnePageCheckoutPlugin/components/OnePageCheckout/Summary.html.twig'
         one_page_checkout_payment:
             sylius_one_page_checkout_payment:
                 component: 'OnePageCheckout:Payment'
                 props:
-                    order: '@=_context.order'
+                    orderId: '@=_context.orderId'
                     template: '@MudrakOnePageCheckoutPlugin/components/OnePageCheckout/Payment.html.twig'
         one_page_checkout_shipment:
             sylius_one_page_checkout_shipment:
                 component: 'OnePageCheckout:Shipment'
                 props:
-                    order: '@=_context.order'
+                    orderId: '@=_context.orderId'
                     template: '@MudrakOnePageCheckoutPlugin/components/OnePageCheckout/Shipment.html.twig'
         one_page_checkout_complete:
             sylius_one_page_checkout_complete:
                 component: 'OnePageCheckout:Complete'
                 props:
-                    order: '@=_context.order'
+                    orderId: '@=_context.orderId'
                     template: '@MudrakOnePageCheckoutPlugin/components/OnePageCheckout/Complete.html.twig'
