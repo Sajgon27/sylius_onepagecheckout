@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Mudrak\OnePageCheckoutPlugin\Twig\Components;
 
-use Sylius\Component\Core\Model\Order;
+use Sylius\Component\Core\Model\OrderInterface;
 use Mudrak\OnePageCheckoutPlugin\Handlers\CheckoutSaveFormHandler;
 use Sylius\Bundle\ShopBundle\Form\Type\Checkout\SelectPaymentType;
 use Sylius\TwigHooks\LiveComponent\HookableLiveComponentTrait;
@@ -24,7 +24,7 @@ class Payment
     use HookableLiveComponentTrait;
 
     #[LiveProp(writable: true)]
-    public Order $order;
+    public OrderInterface $order;
 
     public function __construct(
         private CheckoutSaveFormHandler $checkoutFormHandler,

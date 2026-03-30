@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Mudrak\OnePageCheckoutPlugin\Twig\Components;
 
-use Sylius\Component\Core\Model\Order;
+use Sylius\Component\Core\Model\OrderInterface;
 use Mudrak\OnePageCheckoutPlugin\Handlers\CheckoutSaveFormHandler;
 use Doctrine\ORM\EntityManagerInterface;
 use Sylius\Bundle\ShopBundle\Form\Type\Checkout\AddressType;
@@ -25,7 +25,7 @@ class OnePageCheckoutComponent
     use ComponentWithFormTrait;
 
     #[LiveProp]
-    public ?Order $order = null;
+    public ?OrderInterface $order = null;
 
     #[LiveProp(writable: true)]
     public bool $showShippingAddress = false;

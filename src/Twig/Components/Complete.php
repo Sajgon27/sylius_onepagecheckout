@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Mudrak\OnePageCheckoutPlugin\Twig\Components;
 
-use Sylius\Component\Core\Model\Order;
+use Sylius\Component\Core\Model\OrderInterface;
 use Sylius\Bundle\CoreBundle\Form\Type\Checkout\CompleteType;
 use Sylius\Component\Order\Context\CartContextInterface;
 use Sylius\TwigHooks\LiveComponent\HookableLiveComponentTrait;
@@ -28,7 +28,7 @@ class Complete extends AbstractController
     use ComponentWithFormTrait;
 
     #[LiveProp(writable: true)]
-    public Order $order;
+    public OrderInterface $order;
 
     public function __construct(
         private CartContextInterface $cartContext,

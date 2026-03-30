@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Mudrak\OnePageCheckoutPlugin\Twig\Components;
 
-use Sylius\Component\Core\Model\Order;
+use Sylius\Component\Core\Model\OrderInterface;
 use Sylius\TwigHooks\LiveComponent\HookableLiveComponentTrait;
 use Symfony\UX\LiveComponent\Attribute\AsLiveComponent;
 use Symfony\UX\LiveComponent\Attribute\LiveListener;
@@ -18,7 +18,7 @@ class Summary
     use HookableLiveComponentTrait;
 
     #[LiveProp(writable: true, updateFromParent: true)]
-    public Order $order;
+    public OrderInterface $order;
 
     public function __construct() {}
 
